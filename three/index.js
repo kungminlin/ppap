@@ -2,10 +2,17 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+    
+app.get('/', function(req, res) {
+    res.sendFile(__dirname + '/index.html');
+});
 
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
-  app.use('/public' ,express.static(__dirname + '/public'));
+app.get('/three.js', function(req, res) {
+  res.sendFile(__dirname + '/three.js');
+}); 
+
+app.get('/bundle.js', function(req, res) {
+    res.sendFile(__dirname + '/bundle.js');
 });
 
 var cubes = [];
