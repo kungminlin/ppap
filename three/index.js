@@ -20,7 +20,7 @@ var users = [];
 
 io.on('connection', function(socket) {
   console.log(socket.id + ' has connected');
-  socket.emit('client connect');
+  socket.emit('client connect', socket.id);
   socket.emit('objects', cubes);
   socket.on('add object', function(obj){
     console.log("creating object at " + obj.x + ", " + obj.y + ", " + obj.z + ", with color " + obj.color);
@@ -31,17 +31,19 @@ io.on('connection', function(socket) {
     io.sockets.emit('objects', cubes);
   });
   socket.on('add user', function(coords){
-    console.log("user located at " + coords.x + ", " + coords.y + ", " + coords.z + ", with color " + coords.color)
+    console.log("user " + coords.name + " located at " + coords.x + ", " + coords.y + ", " + coords.z + ", with color " + coords.color);
     users.push(coords);
-    io.sockets.emit('users', coords);
+    io.sockets.emit('users', users);
   });
-  if (typeof users !== 'undefined' && users.length > 0) {
-    var n = Math.floor(Math.random()*users.length);
-    console.log(n);
-    socket.emit('camera target', users[n]);
-  }
+  // if (typeof users !== 'undefined' && users.length > 0) {
+  //   var n = Math.floor(Math.random()*users.length);
+  //   console.log(n);
+  //   socket.emit('camera target', users[n]);
+  // }
   socket.on('disconnect', function(){
     console.log(socket.id + ' has disconnected');
+    user = users[users.findIndex(x => x.name==socket.id)];
+    io.sockets.emit('remove user', user);
   });
 });
 

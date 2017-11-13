@@ -4,13 +4,12 @@
 
       var scene = new THREE.Scene();
       scene.background = new THREE.Color( 0xffffff );
-      scene.fog = new THREE.FogExp2( 0xffffff, 0.05 );
+      //scene.fog = new THREE.FogExp2( 0xffffff, 0.05 );
 
       var light = new THREE.DirectionalLight(0xff0000, 5);
       scene.add(light);
 
       var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      camera.position.set(0, 0, 0);
 
       socket.on('camera target', function(cam){
         camera.lookAt(new THREE.Vector3( cam.x, cam.y, cam.z ));
@@ -20,7 +19,7 @@
       var renderer = new THREE.WebGLRenderer();
       renderer.setSize(window.innerWidth, window.innerHeight);
 
-      // var controls = new THREE.OrbitControls(camera, renderer.domElement);
+      var controls = new THREE.OrbitControls(camera, renderer.domElement);
 
       document.body.appendChild(renderer.domElement);
 
@@ -40,11 +39,10 @@
       var users = new THREE.Group();
 
       // Spawning users (players)
-      socket.on('client connect', function(){
-        var user = {x:(Math.random()-0.5)*30, y:(Math.random()-0.5)*30, z:(Math.random()-0.5)*30, color: new THREE.Color(Math.random() * 0xffffff)};
+      socket.on('client connect', function(id){
+        var user = {name:id, x:(Math.random()-0.5)*30, y:(Math.random()-0.5)*30, z:(Math.random()-0.5)*30, color: 0xff0000};
         camera.position.set(user.x, user.y, user.z);
         socket.emit('add user', user);
-        addUser(user);
 
         socket.on('users', function(new_users){
           for (var i in new_users) {
@@ -60,6 +58,10 @@
 
       });
 
+      socket.on('remove user', function(user){
+        removeUser(user);
+      });
+
       // Adds a cube given an object {x: x-pos, y: y-pos, z: z-pos, color: new Color()}
       var addObj = function(new_obj) {
         var geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -73,20 +75,18 @@
 
       // Spawns a user (player)
       var addUser = function(new_user) {
-        var geometry = new THREE.SphereGeometry(30, 32, 32);
-        var material = new THREE.MeshBasicMaterial({color: new_user.color});
+        var geometry = new THREE.SphereGeometry(1, 32, 32);
+        var material = new THREE.MeshBasicMaterial({color: new_user.color, wireframe: true});
         var user = new THREE.Mesh(geometry, material);
-        user.position.x = new_user.x;
-        user.position.y = new_user.y;
-        user.position.z = new_user.z;
+        user.position.set(new_user.x, new_user.y, new_user.z);
+        user.name = new_user.name;
         users.add(user);
       }
 
-      var geometry = new THREE.SphereGeometry(30, 32, 32);
-      var material = new THREE.MeshBasicMaterial({color: new THREE.Color(Math.random() * 0xffffff)});
-      var user = new THREE.Mesh(geometry, material);
-      user.position.set(0, 0, 0);
-      scene.add(user);
+      var removeUser = function(user) {
+        var selectedUser = scene.getObjectByName(user.name);
+        users.remove(selectedUser);
+      }
 
       socket.on('add object', function({x, y, z, color}) {
         addObj({x:x, y:y, z:z, color:color});
@@ -94,6 +94,7 @@
       });
 
       scene.add(objects);
+      scene.add(users);
 
       var animate = function () {
         requestAnimationFrame( animate );

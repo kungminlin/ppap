@@ -6,8 +6,9 @@ gulp.task('default', shell.task([
   //'cp client.js js/client.js',
   //'cp SimpleLogger.js js/SimpleLogger.js',
   //'cp BellTimer.js js/BellTimer.js',
-  'browserify client.js > bundle.js',
-  //'uglifyjs -c -m -- bundle.js' ,
+  'browserify client.js > src/bundle.js',
+  'npm run build',
+  'uglifyjs -c -m -- bundle.js',
   //'cp js/bundle.js js/bundle.min.js',
   'node index.js'
 ]));

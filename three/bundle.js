@@ -1,127 +1,146 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-      var socket = io();
+"use strict";
 
-      // Scene and Document Preparation
+(function e(t, n, r) {
+      function s(o, u) {
+            if (!n[o]) {
+                  if (!t[o]) {
+                        var a = typeof require == "function" && require;if (!u && a) return a(o, !0);if (i) return i(o, !0);var f = new Error("Cannot find module '" + o + "'");throw f.code = "MODULE_NOT_FOUND", f;
+                  }var l = n[o] = { exports: {} };t[o][0].call(l.exports, function (e) {
+                        var n = t[o][1][e];return s(n ? n : e);
+                  }, l, l.exports, e, t, n, r);
+            }return n[o].exports;
+      }var i = typeof require == "function" && require;for (var o = 0; o < r.length; o++) {
+            s(r[o]);
+      }return s;
+})({ 1: [function (require, module, exports) {
+            var socket = io();
 
-      var scene = new THREE.Scene();
-      scene.background = new THREE.Color( 0xffffff );
-      scene.fog = new THREE.FogExp2( 0xffffff, 0.05 );
+            // Scene and Document Preparation
 
-      var light = new THREE.DirectionalLight(0xff0000, 5);
-      scene.add(light);
+            var scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+            //scene.fog = new THREE.FogExp2( 0xffffff, 0.05 );
 
-      var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      camera.position.set(0, 0, 0);
+            var light = new THREE.DirectionalLight(0xff0000, 5);
+            scene.add(light);
 
-      socket.on('camera target', function(cam){
-        camera.lookAt(new THREE.Vector3( cam.x, cam.y, cam.z ));
-        console.log(cam.x + ' ' + cam.y + ' ' + cam.z);
-      });
+            var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-      var renderer = new THREE.WebGLRenderer();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+            socket.on('camera target', function (cam) {
+                  camera.lookAt(new THREE.Vector3(cam.x, cam.y, cam.z));
+                  console.log(cam.x + ' ' + cam.y + ' ' + cam.z);
+            });
 
-      // var controls = new THREE.OrbitControls(camera, renderer.domElement);
+            var renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
 
-      document.body.appendChild(renderer.domElement);
+            var controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-      window.addEventListener( 'resize', onWindowResize, false );
+            document.body.appendChild(renderer.domElement);
 
-      function onWindowResize(){
+            window.addEventListener('resize', onWindowResize, false);
 
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
+            function onWindowResize() {
 
-          renderer.setSize( window.innerWidth, window.innerHeight );
+                  camera.aspect = window.innerWidth / window.innerHeight;
+                  camera.updateProjectionMatrix();
 
-      }
+                  renderer.setSize(window.innerWidth, window.innerHeight);
+            }
 
-      // Object Parent (All player-spawn objects will be child of this group)
-      var objects = new THREE.Group();
-      var users = new THREE.Group();
+            // Object Parent (All player-spawn objects will be child of this group)
+            var objects = new THREE.Group();
+            var users = new THREE.Group();
 
-      // Spawning users (players)
-      socket.on('client connect', function(){
-        var user = {x:(Math.random()-0.5)*30, y:(Math.random()-0.5)*30, z:(Math.random()-0.5)*30, color: new THREE.Color(Math.random() * 0xffffff)};
-        camera.position.set(user.x, user.y, user.z);
-        socket.emit('add user', user);
-        addUser(user);
+            // Spawning users (players)
+            socket.on('client connect', function (id) {
+                  var user = { name: id, x: (Math.random() - 0.5) * 30, y: (Math.random() - 0.5) * 30, z: (Math.random() - 0.5) * 30, color: 0xff0000 };
+                  camera.position.set(user.x, user.y, user.z);
+                  socket.emit('add user', user);
 
-        socket.on('users', function(new_users){
-          for (var i in new_users) {
-            addUser(new_users[i]);
-          }
-        });
+                  socket.on('users', function (new_users) {
+                        for (var i in new_users) {
+                              addUser(new_users[i]);
+                        }
+                  });
 
-        socket.on('objects', function(new_objects) {
-          for (var i in new_objects) {
-            addObj(new_objects[i]);
-          }
-        });
+                  socket.on('objects', function (new_objects) {
+                        for (var i in new_objects) {
+                              addObj(new_objects[i]);
+                        }
+                  });
+            });
 
-      });
+            socket.on('remove user', function (user) {
+                  removeUser(user);
+            });
 
-      // Adds a cube given an object {x: x-pos, y: y-pos, z: z-pos, color: new Color()}
-      var addObj = function(new_obj) {
-        var geometry = new THREE.BoxGeometry(1, 1, 1);
-        var material = new THREE.MeshBasicMaterial({color: new_obj.color});
-        var obj = new THREE.Mesh(geometry, material);
-        obj.position.x = new_obj.x;
-        obj.position.y = new_obj.y;
-        obj.position.z = new_obj.z;
-        objects.add(obj);
-      };
+            // Adds a cube given an object {x: x-pos, y: y-pos, z: z-pos, color: new Color()}
+            var addObj = function addObj(new_obj) {
+                  var geometry = new THREE.BoxGeometry(1, 1, 1);
+                  var material = new THREE.MeshBasicMaterial({ color: new_obj.color });
+                  var obj = new THREE.Mesh(geometry, material);
+                  obj.position.x = new_obj.x;
+                  obj.position.y = new_obj.y;
+                  obj.position.z = new_obj.z;
+                  objects.add(obj);
+            };
 
-      // Spawns a user (player)
-      var addUser = function(new_user) {
-        var geometry = new THREE.SphereGeometry(30, 32, 32);
-        var material = new THREE.MeshBasicMaterial({color: new_user.color});
-        var user = new THREE.Mesh(geometry, material);
-        user.position.x = new_user.x;
-        user.position.y = new_user.y;
-        user.position.z = new_user.z;
-        users.add(user);
-      }
+            // Spawns a user (player)
+            var addUser = function addUser(new_user) {
+                  var geometry = new THREE.SphereGeometry(1, 32, 32);
+                  var material = new THREE.MeshBasicMaterial({ color: new_user.color, wireframe: true });
+                  var user = new THREE.Mesh(geometry, material);
+                  user.position.set(new_user.x, new_user.y, new_user.z);
+                  user.name = new_user.name;
+                  users.add(user);
+            };
 
-      var geometry = new THREE.SphereGeometry(30, 32, 32);
-      var material = new THREE.MeshBasicMaterial({color: new THREE.Color(Math.random() * 0xffffff)});
-      var user = new THREE.Mesh(geometry, material);
-      user.position.set(0, 0, 0);
-      scene.add(user);
+            var removeUser = function removeUser(user) {
+                  var selectedUser = scene.getObjectByName(user.name);
+                  users.remove(selectedUser);
+            };
 
-      socket.on('add object', function({x, y, z, color}) {
-        addObj({x:x, y:y, z:z, color:color});
-        socket.emit('objects', {x:x, y:y, z:z, color:color});
-      });
+            socket.on('add object', function (_ref) {
+                  var x = _ref.x,
+                      y = _ref.y,
+                      z = _ref.z,
+                      color = _ref.color;
 
-      scene.add(objects);
+                  addObj({ x: x, y: y, z: z, color: color });
+                  socket.emit('objects', { x: x, y: y, z: z, color: color });
+            });
 
-      var animate = function () {
-        requestAnimationFrame( animate );
-        renderer.render( scene, camera );
-      };
+            scene.add(objects);
+            scene.add(users);
 
-      animate();
+            var animate = function animate() {
+                  requestAnimationFrame(animate);
+                  renderer.render(scene, camera);
+            };
 
-      $(document).keydown(function(e) {
-        e.preventDefault();
-        switch(e.keyCode) {
-          // case 65:
-          //   camera.rotation.y += 0.1;
-          //   break;
-          // case 87:
-          //   camera.rotation.x -= 0.1;
-          //   break;
-          // case 68:
-          //   camera.rotation.y -= 0.1;
-          //   break;
-          // case 83:
-          //   camera.rotation.x += 0.1;
-          //   break;
-          case 32:
-            socket.emit('add object', {x:(Math.random()-0.5)*30, y:(Math.random()-0.5)*30, z:(Math.random()-0.5)*30, color: new THREE.Color(Math.random() * 0xffffff)});
-            break;
-          default: return;
-        }
-      });
-},{}]},{},[1]);
+            animate();
+
+            $(document).keydown(function (e) {
+                  e.preventDefault();
+                  switch (e.keyCode) {
+                        // case 65:
+                        //   camera.rotation.y += 0.1;
+                        //   break;
+                        // case 87:
+                        //   camera.rotation.x -= 0.1;
+                        //   break;
+                        // case 68:
+                        //   camera.rotation.y -= 0.1;
+                        //   break;
+                        // case 83:
+                        //   camera.rotation.x += 0.1;
+                        //   break;
+                        case 32:
+                              socket.emit('add object', { x: (Math.random() - 0.5) * 30, y: (Math.random() - 0.5) * 30, z: (Math.random() - 0.5) * 30, color: new THREE.Color(Math.random() * 0xffffff) });
+                              break;
+                        default:
+                              return;
+                  }
+            });
+      }, {}] }, {}, [1]);
